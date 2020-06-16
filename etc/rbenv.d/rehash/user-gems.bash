@@ -1,0 +1,1 @@
+make_shims "$(brew --prefix)"/lib/ruby/gems/*/bin/*

@@ -1,12 +1,38 @@
 # rbenv plugin for Homebrew Ruby gems support
 
-The Homebrew installation of Ruby via `brew install ruby` sets the RubyGems executable path to a location not supported by rbenv.
-This means that if you want to use your Homebrew Ruby with rbenv, it won't be able to recognise gems installed for that version.
-This plugin adds support for those gems.
+rbenv can't find gems from Ruby versions installed through Homebrew, as opposed to using `rbenv install`.
+
+This is an issue when it's useful to have an external version installed on the system and added to rbenv by creating a symlink in the rbenv versions directory.
+This doesn't work very well though, as rbenv can't find gems installed in Homebrew Ruby versions because their gem binaries are placed in an unexpected location.
+
+This plugin solves this issue by making rbenv look for gems in additional locations.
+
+The plugin also adds support for the case where it's desirable to have the same version of Ruby installed twice through `rbenv install` as well as Homebrew, and share the Homebrew installation gems with the rbenv installation.
+
+## Problem manifestation
+
+Install Ruby through Homebrew
+
+```shell script
+  brew install ruby
+```
+
+Add the custom Ruby installation to rbenv by creating a symlink in the `versions` directory.
+
+```shell script
+  ln -s <HOMEBREW_PREFIX>/opt/ruby <RBENV_ROOT>/versions/<NAME>
+```
+
+_`<RBENV_ROOT>` is by default set to `~/.rbenv`_
+
+Select the symlinked Homebrew version with rbenv and install a gem with `gem install <gem_name>`. Try to use the gem by executing `<gem_name>`.
+rbenv will print a message saying the gem was not found in the current Ruby version even though it has just been installed.  
 
 ## Gem binary locations
 
-Ruby versions installed with `rbenv install` set RubyGems `bindir` to `<RBENV_ROOT>/versions/<VERSION>/bin`, as rbenv expects the gem executables to reside in the same directory as the Ruby executable.
+rbenv looks for gem executables in [the same directory as the Ruby binary](https://github.com/rbenv/rbenv/blob/c879cb0f2fb2b01c6ee73cdfb25c90d139febda9/libexec/rbenv-which#L43).
+
+Ruby versions installed with `rbenv install` set their RubyGems `bindir` to `<RBENV_ROOT>/versions/<VERSION>/bin`, as expected by rbenv.
 
 The [Homebrew version of Ruby](https://github.com/Homebrew/homebrew-core/blob/master/Formula/ruby.rb) sets the RubyGems [`bindir` path](https://github.com/Homebrew/homebrew-core/blob/master/Formula/ruby.rb#L40-L42) to `<HOMEBREW_PREFIX>/lib/ruby/gems/<API_VERSION>/bin`:
 
@@ -16,16 +42,12 @@ The [Homebrew version of Ruby](https://github.com/Homebrew/homebrew-core/blob/ma
   end
 ```
 
-However, the Ruby executable lives in `<HOMEBREW_PREFIX>/opt/ruby/bin`, which means that the gem executables don't live in the same place as the Ruby binary. This causes a problem where rbenv can't find gems for the Homebrew Ruby if you have symlinked it in `<RBENV_ROOT>/versions` by running `ln -s /usr/local/opt/ruby <RBENV_ROOT>/versions/<NAME>`.
-
-This plugin also adds support for the case where you have the same version of Ruby installed through `rbenv install` and Homebrew, and want to share the Homebrew installation gems with the rbenv installation. 
+However, the Ruby executable lives in `<HOMEBREW_PREFIX>/opt/ruby/bin` which is not the same place as the gem executables. 
 
 ## Implementation
 
 This plugin modifies rbenv to look for gems in the Homebrew gem directories in addition to the default location when creating shims (or rehashing). rbenv will search for binaries in the `<HOMEBREW_PREFIX>/lib/ruby/gems/<API_VERSION>/bin` directory for the current version when executing a command.
 In case of conflicts, binaries from the default rbenv location will be picked.
-
-_`<RBENV_ROOT>` is by default set to `~/.rbenv`_
 
 ## Whence
 

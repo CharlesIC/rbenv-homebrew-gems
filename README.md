@@ -26,3 +26,8 @@ This plugin modifies rbenv to look for gems in the Homebrew gem directories in a
 In case of conflicts, binaries from the default rbenv location will be picked.
 
 _`<RBENV_ROOT>` is by default set to `~/.rbenv`_
+
+## Whence
+
+The default `rbenv whence` command will not show the Homebrew Ruby version, as it only searches for binaries in the default rbenv location and is not hook-enabled so can't be extended like `rbenv which` or `rbenv rehash`.
+To check for binaries including the Homebrew installation, use the `whence-all` command provided with this plugin instead.

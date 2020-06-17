@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Summary: List all Ruby versions, including the Homebrew Ruby installation, that contain the given executable
+# Usage: rbenv whence-all <command>
+
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+# Provide rbenv completions
+if [ "$1" = "--complete" ]; then
+  exec rbenv-whence --complete
+fi
+
+whence-all() {
+  local command="$1"
+  rbenv-versions --bare | while read -r version; do
+    local path
+    path=$(rbenv-which "$command" 2>/dev/null)
+    [[ $? && -n "$path" ]] && echo "$version"
+  done
+}
+
+RBENV_COMMAND="$1"
+if [ -z "$RBENV_COMMAND" ]; then
+  rbenv-help --usage whence-all >&2
+  exit 1
+fi
+
+result="$(whence-all "$RBENV_COMMAND")"
+[ -n "$result" ] && echo "$result"
